@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   let userData;
   try {
     userData = JSON.parse(userCookie.value);
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
   }
 
@@ -50,8 +50,7 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ event: result.rows[0] });
-  } catch (error) {
-    console.error('Create Event Error:', error);
+  } catch {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -13,6 +13,12 @@ const authPaths = ['/auth'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Redirect all root requests to the auth page for non-authenticated users
+  if (pathname === '/') {
+    const url = new URL('/auth', request.url);
+    return NextResponse.redirect(url);
+  }
   
   // Check if the user is authenticated by looking for auth cookie or header
   const user = request.cookies.get('user')?.value;
@@ -54,4 +60,4 @@ export const config = {
     '/api/events/create',
     '/auth',
   ],
-}; 
+};
