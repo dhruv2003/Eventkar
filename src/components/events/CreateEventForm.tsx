@@ -67,7 +67,12 @@ interface EventFormData {
   rsvp_approval: boolean;
 }
 
-export default function CreateEventForm() {
+interface CreateEventFormProps {
+  userName: string;
+  refreshUserName: () => void;
+}
+
+export default function CreateEventForm({ userName, refreshUserName }: CreateEventFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
@@ -86,6 +91,11 @@ export default function CreateEventForm() {
     message: '',
     type: 'success',
   });
+
+  // Effect to refresh user data when component mounts
+  useEffect(() => {
+    refreshUserName();
+  }, [refreshUserName]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -138,8 +148,19 @@ export default function CreateEventForm() {
     setToast({ ...toast, show: false });
   };
 
+  const handleLogout = () => {
+    // Clear the user cookie
+    document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    // Also clear localStorage if you're using it as a backup
+    localStorage.removeItem('user');
+    // Redirect to auth page
+    router.push('/auth');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Display the user's name
+      <h1 className="text-2xl font-bold mb-4">Welcome, {userName}! Create Your Event</h1> */}
       {/* Toast Notification */}
       {toast.show && (
         <Toast
@@ -148,7 +169,6 @@ export default function CreateEventForm() {
           onClose={closeToast}
         />
       )}
-      
       {/* Navigation Bar */}
       <nav className="bg-white shadow-md border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -167,18 +187,24 @@ export default function CreateEventForm() {
                 </svg>
               </button>
               <div className="relative">
-                <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors duration-200">
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors duration-200"
+                  title="Logout"
+                >
                   <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-100 to-indigo-100 flex items-center justify-center">
-                    <span className="text-purple-600 font-medium">JD</span>
+                    <span className="text-purple-600 font-medium">{userName.charAt(0).toUpperCase()}</span>
                   </div>
-                  <span className="text-sm font-medium">John Doe</span>
+                  <span className="text-sm font-medium">{userName}</span>
+                  <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
                 </button>
               </div>
             </div>
           </div>
         </div>
       </nav>
-
       {/* Main Content */}
       <main className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
@@ -348,4 +374,4 @@ export default function CreateEventForm() {
       </main>
     </div>
   );
-} 
+}
