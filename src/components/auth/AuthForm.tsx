@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
@@ -10,41 +11,31 @@ export default function AuthForm() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [notification, setNotification] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setNotification('');
 
     try {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: isLogin ? 'login' : 'signup',
-          email,
-          password,
-          ...(isLogin ? {} : { name }),
-        }),
-      });
+      if (isLogin) {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
 
-      const data = await response.json();
+        if (!data.session) {
+          throw new Error('Login failed. Please try again.');
+        }
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Authentication failed');
+        router.push('/dashboard'); // Redirect to dashboard
+      } else {
+        const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
+        if (error) throw error;
+        setNotification('Sign-up successful! Please check your email to verify your account.');
       }
-
-      // Store user data in cookie
-      Cookies.set('user', JSON.stringify(data.user), { expires: 7 }); // 7 days expiry
-      
-      // Also maintain localStorage for backward compatibility
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
-      router.push('/dashboard'); // Redirect to dashboard after successful auth
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+      setError((err instanceof Error ? err.message : 'Authentication failed') || 'Authentication failed');
     }
   };
 
@@ -105,9 +96,8 @@ export default function AuthForm() {
             />
           </div>
 
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
-          )}
+          {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+          {notification && <div className="text-green-500 text-sm text-center">{notification}</div>}
 
           <div>
             <button
@@ -132,4 +122,4 @@ export default function AuthForm() {
       </div>
     </div>
   );
-} 
+}

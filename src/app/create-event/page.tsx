@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import CreateEventForm from '@/components/events/CreateEventForm';
 
@@ -10,7 +10,7 @@ export default function CreateEventPage() {
   const router = useRouter();
 
   // Function to get fresh user data
-  const fetchUserData = () => {
+  const fetchUserData = useCallback(() => {
     const userDataStr = document.cookie
       .split('; ')
       .find(row => row.startsWith('user='))
@@ -30,7 +30,7 @@ export default function CreateEventPage() {
       console.error('Error parsing user data:', error);
       setLoading(false);
     }
-  };
+  }, [router]);
 
   useEffect(() => {
     fetchUserData();
@@ -39,7 +39,7 @@ export default function CreateEventPage() {
     const interval = setInterval(fetchUserData, 10000); // Check every 10 seconds
     
     return () => clearInterval(interval); // Clean up on unmount
-  }, [router]);
+  }, [fetchUserData]);
 
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
